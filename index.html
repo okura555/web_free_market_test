@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
+
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,11 +13,7 @@
 
 
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 20px;
-            text-align: center;
-        }
+
         canvas {
             border: 2px solid #858080;
             margin: 20px auto;
@@ -32,11 +30,14 @@
     </style>
 </head>
 <body>
+
+
+  
     <!-- <img src="asset\\img\\index_img\\index_title.png" alt="みゃくみゃく" style="margin-top:20px; max-width:500px;"> -->
     
-    <div id="all_top_kanban"></div>
-
-
+    <!-- <div id="all_top_kanban"><a href="index.html"></a></div> -->
+    <a href="index.html" class="all_top_kanban"></a>
+    <!-- href="pages/buy_graph.html" -->
 
     <div class="time-display" id="timeDisplay"></div>
     <!-- <div style="margin-top:20px; max-width:300px;" class="time-display" id="timeDisplay"></div> -->
@@ -49,79 +50,123 @@
 
 
     <div id="minValue"></div>
-    <img src="asset\\img\\index_img\\index_banner_buy.png" alt="みゃくみゃく" style="margin-top:20px; max-width:300px;">
-    
+    <!-- <img src="asset\\img\\index_img\\index_banner_buy.png" alt="みゃくみゃく" style="margin-top:20px; max-width:300px;"> -->
+    <a href="pages/buy_graph.html" style="text-decoration: none;">
+        <img src="asset\\img\\index_img\\index_banner_buy.png" alt="画像1" style="max-width: 300px; height: auto; margin-top:20px; cursor: pointer;">
+    </a>    
+
     <!-- 三つの画像を横並びで表示 -->
     <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
         <a href="pages/buy_graph.html" style="text-decoration: none;">
-            <img src="asset\\img\\index_img\\index_banner_junp_buy.png" alt="画像1" style="max-width: 120px; height: auto; cursor: pointer;">
+            <img src="asset\\img\\index_img\\index_banner_junp_buy.jpg" alt="画像1" style="max-width: 120px; height: auto; cursor: pointer;">
         </a>
 
 
-        <a href="buy_graph.html" style="text-decoration: none;">
+        <a href="https://fes.kgef.ac.jp/math-lab/2024/"  rel="noopener noreferrer" style="text-decoration: none;">
             <img src="asset\\img\\index_img\\index_banner_junp_akashic_record.jpg" alt="画像2" style="max-width: 120px; height: auto; cursor: pointer;">
         </a>
-        <a href="buy_graph.html" style="text-decoration: none;">
+        <a href="https://fes.kgef.ac.jp/math-lab/2024/"  rel="noopener noreferrer" style="text-decoration: none;">
             <img src="asset\\img\\index_img\\index_banner_junp_buy.png" alt="画像3" style="max-width: 120px; height: auto; cursor: pointer;">
         </a>
     </div>
 
     <script>
+        // let alertShown = true; // 本番はfalseにする。アラートが一度表示されたかを記録するフラグ開発してるときはtrueにしてけしておく
+        let alertShown = false; 
 
-        let buy_price = 100;
+        let basePrice = 100; // 基準価格
         // グラフの初期化
         const ctx = document.getElementById('myChart').getContext('2d');
-        const moneyList = [0, 1, 2, 3, 11, 5, -30, 7, 8, 9];// 例のデータ----------------------
+        // const moneyList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]; // 固定リスト
+        const moneyList = [0, 1, 2, 1, 3, 5, 4, 6, 7, 5,8,9,10,   10,9,8,8,6,7,4,3,2,1,3,-1,0,-2,-4,-5,  -4,-3,-2,-4,-1,0,1,-1,0,1,2,4,3,4,5,   3,1,0,2,0,0,-1,-2,-5,-8,-10,-8,-5,-3,-1,0,];
+
+
+
+
+
         let lastSecond = -1; // 最後に更新した秒を記録
-        let alertShown = false; // アラートが一度表示されたかを記録するフラグ
+
+
+
 
         let labels = ['開始'];
         // 初期データは現在の秒数から計算
         const initialSeconds = new Date().getSeconds();
 
-        //初期で取得して、そこから一秒ずつ足せばいけるはず
-        const hours_m = new Date().getHours();
-        const minutes_m = new Date().getMinutes();
-        const seconds_m = new Date().getSeconds(); 
-            // 時間を秒に変換listは何秒に一回変えるかか、最大86400，割る5で17280
-            const gurahu_int = hours_m * 60 *60+ minutes_m *60+ seconds_m *1;
-            console.log(gurahu_int);
+        // リストから値を選ぶ関数（分数に基づく）
+        function getValueFromList() {
+            const currentMinute = new Date().getMinutes();
+            const index = currentMinute % moneyList.length; // 分数をリストの長さで割った余り
+            return moneyList[index];
+        }
+
+        // パーセント計算関数
+        function calculatePercentage(value) {
+            return basePrice + (basePrice * value / 100);
+        }
+
+        function getInterpolatedValue() {
+            const now = new Date();
+            const currentMinute = now.getMinutes();
+            const nextMinute = (currentMinute + 1) % 60;
+            const currentSecond = now.getSeconds();
+            const indexCurrent = currentMinute % moneyList.length;
+            const indexNext = nextMinute % moneyList.length;
+            const valueCurrent = moneyList[indexCurrent];
+            const valueNext = moneyList[indexNext];
+            // 線形補間
+            const interpolated = valueCurrent + (valueNext - valueCurrent) * (currentSecond / 60);
+            return interpolated;
+        }
 
 
 
-        const initialIndex = initialSeconds % 10;
-        console.log(initialIndex);  
+        // 初期値を生成 最初に少し前を表示しておく
+        const initialValue = getValueFromList();
+        // const initialValue = 100;
+        // let data = [calculatePercentage(initialValue)];
+        let data = [];
+        const nowMinute = new Date().getMinutes();
+        for (let i = 2; i >= 0; i--) {
+            const virtualMinute = (nowMinute -1- i + 60) % 60;
+            const index = virtualMinute % moneyList.length;
+            const value = moneyList[index];
+            const price = calculatePercentage(value);
+            labels.push(`${virtualMinute}分`);
+            data.push(price);
+        }
 
-        let data = [moneyList[initialIndex]];
-        console.log(data);
-        
-        data = data.map(x => x + buy_price);
+
+
+        console.log('初期値:', initialValue, 'パーセント値:', data[0]);
 
         const myChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: '値',
+                    label: '価格（100基準）',
                     data: data,
                     borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1
+                    tension: 0.3    //線が緩やかになる
                 }]
             },
             options: {
                 responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        min: 85,            //グラフの表示の最小値を決める0だと見ずらいから値下げ切りとかが良い
+                        max: 115,
+                        beginAtZero: false
                     }
                 }
             }
         });
 
-        // 秒数が変わるごとに更新
+        // 1秒ごとに更新
         setInterval(() => {
             const now = new Date();
-            const currentSecond = now.getSeconds();
+            const currentMinute = now.getMinutes();
 
             // 時、分、秒を取得（0埋めして2桁に）
             const hours = String(now.getHours()).padStart(2, '0');
@@ -131,60 +176,33 @@
             document.getElementById('timeDisplay').textContent = 
                 `現在時刻: ${hours}:${minutes}:${seconds}`;
 
+            // 補間値を取得
+            const interpolatedValue = getInterpolatedValue();
+            const percentagePrice = calculatePercentage(interpolatedValue);
 
+            console.log('選択値:', interpolatedValue, 'パーセント値:', percentagePrice);
 
-
-
-
-
-            if (currentSecond !== lastSecond) {
-                lastSecond = currentSecond;
-
-                // 秒数を10で割った余りをインデックスとして使用
-                const dataIndex = currentSecond % 10;
-
-                console.log(dataIndex);
-
-
-
-                let value = moneyList[dataIndex];
-                console.log(value);
-                console.log(dataIndex);
-
-                                // データを最新の500点に制限
-                if (data.length > 5) {
-                    data.shift();
-                    labels.shift();
-
-                    if (!alertShown) {
-                        alert("合言葉で10%オフ!!!!!");
-                        alertShown = true; // フラグをtrueにして、次回以降は表示しない
-                    }
-                }
-
-                //値段の設定
-                buy_price = value + buy_price;
-                console.log(buy_price);
-                // value = value + 1000;
-                labels.push(now.toLocaleTimeString());
-                // data.push(value + buy_price);    //グラフに反映される値を増やしてるpush
-                data.push(buy_price);    //グラフに反映される値を増やしてるpush
-
-                // グラフを更新
-                myChart.data.labels = labels;
-                myChart.data.datasets[0].data = data;
-                myChart.update();
-
-                // ★ここで最小値を表示
-                const minValue = Math.min(...data);
-                document.getElementById('minValue').textContent = `現在の最安値: ${minValue}`;
+            // データを最新の3点に制限
+            if (data.length > 200) {
+                data.shift();
+                labels.shift();
             }
-        }, 
-        
-        
-        1000); // 200ミリ秒ごとに秒の変更をチェック
-        setInterval(updateDisplay);
-        updateDisplay();
+
+            // 新しい値を追加
+            labels.push(`${hours}:${minutes}:${seconds}`);
+            data.push(percentagePrice);
+
+            // グラフを更新
+            myChart.data.labels = labels;
+            myChart.data.datasets[0].data = data;
+            myChart.update();
+
+            // ★ここで最小値を表示
+            const minValue = Math.min(...data);
+            document.getElementById('minValue').textContent = `現在の最安値: ${minValue.toFixed(2)}`;
+        }, 3000); // 1秒ごとに更新
+        // console.log(getInterpolatedValue());
+        // updateDisplay();
 
     </script>
 </body>
